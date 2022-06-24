@@ -22,7 +22,7 @@ help:  ## Display this help
 .PHONY: build
 build: rockspec validate ## Build / Pack the plugin. Output at the ./dist directory
 	@find kong/plugins/${NAME}/ -type f -iname "*lua~" -exec rm -f {} \;
-	@podman run --rm -u 0 -v ${PWD}:/plugin \
+	@docker run --rm -u 0 -v ${PWD}:/plugin \
 		--entrypoint /bin/bash kong:2.0.3-centos \
 		-c "cd /plugin ; yum install -q -y zip; luarocks make > /dev/null 2>&1 ; luarocks pack kong-plugin-${NAME} 2> /dev/null ; chown ${UID}:${GID} *.rock"
 	@mkdir -p dist

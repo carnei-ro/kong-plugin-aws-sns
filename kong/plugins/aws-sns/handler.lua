@@ -1,7 +1,6 @@
 -- Copyright (C) Kong Inc.
 
 local aws_v4 = require "kong.plugins.aws-sns.v4"
-local http = require "resty.http"
 local cjson = require "cjson.safe"
 cjson.decode_array_with_array_mt(true)
 local request_util = require "kong.plugins.aws-sns.request-util"
@@ -51,9 +50,7 @@ end
 
 
 local ngx_encode_base64 = ngx.encode_base64
-local ngx_update_time = ngx.update_time
 local tostring = tostring
-local ngx_now = ngx.now
 local error = error
 local fmt = string.format
 
@@ -67,17 +64,11 @@ local raw_content_types = {
 }
 
 
-local function get_now()
-  ngx_update_time()
-  return ngx_now() * 1000 -- time is kept in seconds with millisecond resolution.
-end
-
 local plugin = {}
 
 
 function plugin:access(conf)
   local upstream_body = kong.table.new(0, 6)
-  local ctx = ngx.ctx
 
   local content_type = kong.request.get_header("content-type")
   local body_raw = request_util.read_request_body(conf.skip_large_bodies)
@@ -171,58 +162,28 @@ function plugin:access(conf)
     return error(err)
   end
 
-  local uri = port and fmt("https://%s:%d", host, port)
-                    or fmt("https://%s", host)
+  -- kong.response.exit(200, request )
 
-  local proxy_opts
-  if conf.proxy_url then
-    -- lua-resty-http uses the request scheme to determine which of
-    -- http_proxy/https_proxy it will use, and from this plugin's POV, the
-    -- request scheme is always https
-    proxy_opts = { https_proxy = conf.proxy_url }
+  kong.service.request.set_method(request.method)
+  kong.service.request.set_scheme("https")
+  if request.target == "/?" then
+    request.target = "/"
+  end
+  kong.service.request.set_path(request.target)
+
+  kong.service.set_target(request.host, request.port)
+
+  if request.body then
+    kong.service.request.set_raw_body(request.body)
+  else
+    kong.service.request.set_raw_body('')
   end
 
-  -- kong.response.exit(200, {
-  --   method = "POST",
-  --   path = request.url,
-  --   body = request.body,
-  --   headers = request.headers,
-  --   ssl_verify = false,
-  --   proxy_opts = proxy_opts,
-  --   keepalive_timeout = conf.keepalive,
-  -- })
-
-  -- Trigger request
-  local client = http.new()
-  client:set_timeout(conf.timeout)
-  local kong_wait_time_start = get_now()
-  local res, err = client:request_uri(uri, {
-    method = "POST",
-    path = request.url,
-    body = request.body,
-    headers = request.headers,
-    ssl_verify = false,
-    proxy_opts = proxy_opts,
-    keepalive_timeout = conf.keepalive,
-  })
-  if not res then
-    return error(err)
-  end
-
-  local content = res.body
-
-  -- setting the latency here is a bit tricky, but because we are not
-  -- actually proxying, it will not be overwritten
-  ctx.KONG_WAITING_TIME = get_now() - kong_wait_time_start
-  local headers = res.headers
-
-  local status = res.status
-
-  return kong.response.exit(status, content, headers)
+  kong.service.request.set_headers(request.headers)
 end
 
 plugin.PRIORITY = 750
 
-plugin.VERSION = "0.1.0"
+plugin.VERSION = "0.2.0"
 
 return plugin

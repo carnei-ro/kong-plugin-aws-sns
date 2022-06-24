@@ -24,14 +24,12 @@ Priority: **750**
 
 ## Plugin Version
 
-Version: **2.0.0**
+Version: **0.2.0**
 
 ## config
 
 | name | type | required | validations | default |
 |-----|-----|-----|-----|-----|
-| timeout | number | <pre>true</pre> |  | <pre>60000</pre> |
-| keepalive | number | <pre>true</pre> |  | <pre>60000</pre> |
 | aws_key | string | <pre>false</pre> |  |  |
 | aws_secret | string | <pre>false</pre> |  |  |
 | aws_assume_role_arn | string | <pre>false</pre> |  |  |
@@ -40,7 +38,6 @@ Version: **2.0.0**
 | topic_arn | string | <pre>true</pre> |  |  |
 | host | string | <pre>false</pre> |  |  |
 | port | integer | <pre>false</pre> | <pre>- between:<br/>  - 0<br/>  - 65535</pre> | <pre>443</pre> |
-| proxy_url | string | <pre>false</pre> |  |  |
 | skip_large_bodies | boolean | <pre>false</pre> |  | <pre>false</pre> |
 | base64_encode_body | boolean | <pre>false</pre> |  | <pre>false</pre> |
 
@@ -51,8 +48,6 @@ plugins:
   - name: aws-sns
     enabled: true
     config:
-      timeout: 60000
-      keepalive: 60000
       aws_key: ''
       aws_secret: ''
       aws_assume_role_arn: ''
@@ -61,7 +56,6 @@ plugins:
       topic_arn: ''
       host: ''
       port: 443
-      proxy_url: ''
       skip_large_bodies: false
       base64_encode_body: false
 
