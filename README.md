@@ -2,6 +2,8 @@
 
 summary: Publishes the body request to an AWS SNS topic
 
+This is a fork from [`aws-lambda`](https://github.com/Kong/kong/tree/master/kong/plugins/aws-lambda) plugin from Kong.
+
 TODO:
 
 - [ ] tests
